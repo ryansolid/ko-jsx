@@ -13,6 +13,7 @@ And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel lo
 # API
 
 There is no ko.applyBinding. Instead the app starts with:
+
     r.root(() => {
       var app = new AppViewModel()
       mountEl.appendChild(app.render())
