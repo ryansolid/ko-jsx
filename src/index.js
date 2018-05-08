@@ -1,20 +1,20 @@
 import ko from 'knockout'
-import createRuntime from 'babel-plugin-jsx-dom-expressions/dist/createRuntime'
+import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
 const r = createRuntime({
   wrapExpr: function(accessor, fn) {
-    var comp;
-    comp = ko.computed(function() {
-      var value;
-      value = accessor();
+    var comp = ko.computed(function() {
+      var value = accessor();
       if (ko.isObservable(value)) {
-        return ko.computed(function() {
-          return fn(value());
+        var comp2 = ko.computed(function() {
+          fn(value());
         });
+        r.onDispose(comp2.dispose.bind(comp2))
+        return
       }
-      return fn(value);
+      fn(value);
     });
-    return r.onDispose(comp.dispose.bind(comp));
+    r.onDispose(comp.dispose.bind(comp));
   }
 });
 
@@ -180,4 +180,4 @@ ko.observable.fn.map = function(mapFn) {
   return comp;
 };
 
-export default r
+export default r;
