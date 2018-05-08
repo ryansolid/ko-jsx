@@ -1,0 +1,25 @@
+{
+  "name": "ko-jsx",
+  "description": "",
+  "version": "0.0.1",
+  "author": "Ryan Carniato",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryansolid/ko-jsx"
+  },
+  "module": "dist/index.js",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublishOnly": "rollup -c"
+  },
+  "devDependencies": {
+    "knockout": "3.4.x",
+    "babel-plugin-jsx-dom-expressions": "^0.0.11",
+    "rollup": "^0.58.2",
+    "rollup-plugin-node-resolve": "^3.0.0"
+  },
+  "peerDependencies": {
+    "knockout": "3.4.x"
+  }
+}
