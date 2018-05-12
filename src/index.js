@@ -160,7 +160,7 @@ ko.observable.fn.map = function(mapFn) {
       while (j < newLength) {
         if (newMapped.hasOwnProperty(j)) {
           mapped[j] = newMapped[j];
-          disposables[i] = tempDisposables[i];
+          disposables[j] = tempDisposables[j];
         } else {
           mapped[j] = r.root(function(dispose) {
             disposables[j] = dispose;

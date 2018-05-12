@@ -1,6 +1,6 @@
 # Knockout JSX
 
-This library is a replacement for Knockout.js' renderer. It trades Knockout's data-bind and DOM traversing for precompiled JSX. Using these techniques allows for dramatic performance improvements across the board putting Knockout in the company of the fastest Virtual DOM libraries.
+This library is a replacement for Knockout.js' renderer. It trades Knockout's data-bind and DOM traversing for precompiled JSX. Using these techniques allows for dramatic performance improvements across the board putting Knockout in the company of some of the fastest libraries. See [JS Frameworks Benchmark](https://github.com/krausest/js-framework-benchmark).
 
 It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://github.com/ryansolid/babel-plugin-jsx-dom-expressions). It compiles JSX to DOM statements and wraps expressions in functions that can be called by the library of choice. In this case ko.computed wrap these expressions ensuring the view stays up to date. Unlike Virtual DOM only the changed nodes are affected and the whole tree is not re-rendered over and over.
 
