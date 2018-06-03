@@ -125,7 +125,7 @@ ko.observable.fn.map = function(mapFn) {
       newEnd = newLength - 1;
       while (end >= 0 && newEnd >= 0 && newList[newEnd] === list[end]) {
         newMapped[newEnd] = mapped[end];
-        tempDisposables[newEnd] = disposables[newEnd];
+        tempDisposables[newEnd] = disposables[end];
         end--;
         newEnd--;
       }
