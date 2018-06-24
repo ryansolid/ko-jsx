@@ -2,7 +2,7 @@ import ko from 'knockout'
 import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
 const r = createRuntime({
-  wrapExpr: function(accessor, fn) {
+  wrapExpr: function(accessor, isAttr, fn) {
     var comp = ko.computed(function() {
       var value = accessor();
       if (ko.isObservable(value)) {
