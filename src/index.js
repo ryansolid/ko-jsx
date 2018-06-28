@@ -1,6 +1,8 @@
 import ko from 'knockout'
 import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
+let globalContext = null;
+let cleanup;
 const r = createRuntime({
   wrapExpr: function(accessor, isAttr, fn) {
     var comp = ko.computed(function() {
@@ -9,21 +11,23 @@ const r = createRuntime({
         var comp2 = ko.computed(function() {
           fn(value());
         });
-        r.onDispose(comp2.dispose.bind(comp2))
+        cleanup(comp2.dispose.bind(comp2))
         return
       }
       fn(value);
     });
-    r.onDispose(comp.dispose.bind(comp));
+    cleanup(comp.dispose.bind(comp));
+  },
+  disposer: cleanup = function(fn) {
+    var ref;
+    return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
   }
 });
 
-r.context = null;
-
 r.root = function(fn) {
   var context, d, ret;
-  context = r.context;
-  r.context = {
+  context = globalContext;
+  globalContext = {
     disposables: d = []
   };
   ret = ko.ignoreDependencies(function() {
@@ -36,13 +40,8 @@ r.root = function(fn) {
       d = [];
     });
   });
-  r.context = context;
+  globalContext = context;
   return ret;
-};
-
-r.onDispose = function(fn) {
-  var ref;
-  return (ref = r.context) != null ? ref.disposables.push(fn) : void 0;
 };
 
 ko.observable.fn.map = function(mapFn) {
@@ -51,7 +50,7 @@ ko.observable.fn.map = function(mapFn) {
   list = [];
   disposables = [];
   length = 0;
-  r.onDispose(function() {
+  cleanup(function() {
     var d, k, len;
     for (k = 0, len = disposables.length; k < len; k++) {
       d = disposables[k];
@@ -176,7 +175,7 @@ ko.observable.fn.map = function(mapFn) {
     }
     return mapped;
   });
-  r.onDispose(comp.dispose.bind(comp));
+  cleanup(comp.dispose.bind(comp));
   return comp;
 };
 
