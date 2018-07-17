@@ -4,17 +4,17 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 let globalContext = null;
 let cleanup;
 const r = createRuntime({
-  wrapExpr: function(accessor, isAttr, fn) {
+  wrapExpr: function(accessor, elem, isAttr, fn) {
     var comp = ko.computed(function() {
       var value = accessor();
       if (ko.isObservable(value)) {
         var comp2 = ko.computed(function() {
-          fn(value());
+          fn(value(), elem);
         });
         cleanup(comp2.dispose.bind(comp2))
         return
       }
-      fn(value);
+      fn(value, elem);
     });
     cleanup(comp.dispose.bind(comp));
   },
