@@ -27,15 +27,15 @@ There is no opinion on how you set up your View Models, so I just used a render 
 
 ```js
 function Greeter({name, onClick}) {
-  <div onClick={onClick}>Hello {name() ? name() : 'World'}</div>
+  return (<div onClick={onClick}>Hello {name() ? name() : 'World'}</div>);
 }
 
 function App() {
-  var name = ko.observable('John')
-  <>
+  var name = ko.observable('John');
+  return(<>
     <h1>Greeting Example</h1>
     <Greeter name={name} onClick={() => name('Jake')}/>
-  </>
+  </>);
 }
 
 r.root(() => mountEl.appendChild(App()));
