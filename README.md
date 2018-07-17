@@ -6,7 +6,9 @@ It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://githu
 
 To use simply import the package as r:
 
-    import r from 'ko-jsx'
+```js
+import r from 'ko-jsx'
+```
 
 And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel loader, or rollup babel plugin.
 
@@ -14,36 +16,42 @@ And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel lo
 
 There is no ko.applyBinding. Instead the app starts with:
 
-    r.root(() => {
-      var app = new AppViewModel()
-      mountEl.appendChild(app.render())
-    })
+```js
+r.root(() => {
+  var app = new AppViewModel()
+  mountEl.appendChild(app.render())
+})
+```
 
 There is no opinion on how you set up your View Models, so I just used a render function in this example to demonstrate. Your ViewModel could be a functional Component ala React if you wanted to, as the library supports any mixed case function as a JSX tag. For example:
 
-    function Greeter({name, onClick}) {
-      <div onClick={onClick}>Hello {name() ? name() : 'World'}</div>
-    }
+```js
+function Greeter({name, onClick}) {
+  <div onClick={onClick}>Hello {name() ? name() : 'World'}</div>
+}
 
-    function App() {
-      var name = ko.observable('John')
-      <>
-        <h1>Greeting Example</h1>
-        <Greeter name={name} onClick={() => name('Jake')}/>
-      </>
-    }
+function App() {
+  var name = ko.observable('John')
+  <>
+    <h1>Greeting Example</h1>
+    <Greeter name={name} onClick={() => name('Jake')}/>
+  </>
+}
 
-    r.root(() => mountEl.appendChild(App()));
+r.root(() => mountEl.appendChild(App()));
+```
 
 Control flow is handled in an optimized way through the map custom function added to observable. This uses a memoized map to ensure that only the things that change are updated. It only calls the map function in the case of a truthy value. In the case of an array it calls the function per item. In so the map function handles the role of both the 'if' and 'foreach' bindings. Example:
 
-    var list = ko.observableArray(["Alpha", "Beta", "Gamma"])
+```js
+var list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 
-    <ul>{
-      list.map(item =>
-        <li>{item}</li>
-      )
-    }</ul>
+<ul>{
+  list.map(item =>
+    <li>{item}</li>
+  )
+}</ul>
+```
 
 ## Compatibility
 
