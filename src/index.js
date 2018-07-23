@@ -4,7 +4,7 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 let globalContext = null;
 let cleanup;
 const r = createRuntime({
-  wrapExpr: function(accessor, elem, isAttr, fn) {
+  wrap: function(accessor, elem, isAttr, fn) {
     var comp = ko.computed(function() {
       var value = accessor();
       if (ko.isObservable(value)) {
@@ -18,7 +18,21 @@ const r = createRuntime({
     });
     cleanup(comp.dispose.bind(comp));
   },
-  disposer: cleanup = function(fn) {
+  delegateOn(obsv) {
+    let index = [], prev;
+    const comp = ko.computed(() => {
+      let id;
+      if (prev != null && index[prev]) index[prev]();
+      if ((id = obsv()) != null) index[id]();
+      prev = id;
+    });
+    cleanup(() => comp.dispose());
+    return id => (valueAccessor, element, isAttr, fn) => {
+      index[id] = () => fn(valueAccessor(), element)
+      cleanup(() => index[id] = null);
+    }
+  },
+  cleanup: cleanup = function(fn) {
     var ref;
     return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
   }
