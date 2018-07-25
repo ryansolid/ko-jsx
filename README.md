@@ -7,7 +7,7 @@ It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://githu
 To use simply import the package as r:
 
 ```js
-import r from 'ko-jsx'
+import { r } from 'ko-jsx'
 ```
 
 And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel loader, or rollup babel plugin.
@@ -17,7 +17,7 @@ And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel lo
 There is no ko.applyBinding. Instead the app starts with:
 
 ```js
-r.root(() => {
+root(() => {
   var app = new AppViewModel()
   mountEl.appendChild(app.render())
 })
@@ -38,7 +38,7 @@ function App() {
   </>);
 }
 
-r.root(() => mountEl.appendChild(App()));
+root(() => mountEl.appendChild(<App />));
 ```
 
 Control flow is handled in an optimized way through the map custom function added to observable. This uses a memoized map to ensure that only the things that change are updated. It only calls the map function in the case of a truthy value. In the case of an array it calls the function per item. In so the map function handles the role of both the 'if' and 'foreach' bindings. Example:

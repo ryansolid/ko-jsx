@@ -2,43 +2,24 @@ import ko from 'knockout'
 import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
 let globalContext = null;
-let cleanup;
-const r = createRuntime({
-  wrap: function(accessor, elem, isAttr, fn) {
+export const r = createRuntime({
+  wrap: function(elem, accessor, isAttr, fn) {
     var comp = ko.computed(function() {
       var value = accessor();
       if (ko.isObservable(value)) {
         var comp2 = ko.computed(function() {
-          fn(value(), elem);
+          fn(elem, value());
         });
         cleanup(comp2.dispose.bind(comp2))
         return
       }
-      fn(value, elem);
+      fn(elem, value);
     });
     cleanup(comp.dispose.bind(comp));
-  },
-  delegateOn(obsv) {
-    let index = [], prev;
-    const comp = ko.computed(() => {
-      let id;
-      if (prev != null && index[prev]) index[prev]();
-      if ((id = obsv()) != null) index[id]();
-      prev = id;
-    });
-    cleanup(() => comp.dispose());
-    return id => (valueAccessor, element, isAttr, fn) => {
-      index[id] = () => fn(valueAccessor(), element)
-      cleanup(() => index[id] = null);
-    }
-  },
-  cleanup: cleanup = function(fn) {
-    var ref;
-    return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
   }
 });
 
-r.root = function(fn) {
+export function root(fn) {
   var context, d, ret;
   context = globalContext;
   globalContext = {
@@ -58,6 +39,80 @@ r.root = function(fn) {
   return ret;
 };
 
+export function cleanup(fn) {
+  var ref;
+  return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
+}
+
+// ***************
+// Bindings
+// ***************
+function handleEvent(handler, id) {
+  return e => {
+    let node = e.target,
+      name = `__ev$${e.type}`;
+    while (node && node !== this && !(node[name])) node = node.parentNode;
+    if (node[name] && node[name + 'Id'] === id) handler(node[name], e);
+  }
+}
+
+function shallowDiff(a, b) {
+  let sa = new Set(a), sb = new Set(b);
+  return [a.filter(i => !sb.has(i)), (b.filter(i => !sa.has(i)))];
+}
+
+let eventId = 0
+export function delegateEvent(eventName, handler) {
+  let attached = null,
+    eId = ++eventId,
+    fn = handleEvent(handler, eId);
+  cleanup(() => attached.removeEventListener(eventName, fn));
+  return data => element => {
+    element[`__ev$${eventName}`] = data;
+    element[`__ev$${eventName}Id`] = eId;
+    if (attached) return;
+    attached = true
+    Promise.resolve().then(() => {
+      attached = 'getRootNode' in element ? element.getRootNode() : document;
+      attached.addEventListener(eventName, fn);
+    })
+  }
+}
+
+export function selectOn(obsv, handler) {
+  let index = [], prev = null;
+  const comp = ko.computed(() => {
+    let id = obsv()
+    if (prev != null && index[prev]) handler(index[prev], false);
+    if (id != null) handler(index[id], true);
+    prev = id;
+  })
+  cleanup(() => comp.dispose());
+  return id => element => {
+    index[id] = element
+    cleanup(() => index[id] = null);
+  }
+}
+
+export function multiSelectOn(obsv, handler) {
+  let index = [], prev = [];
+  const comp = ko.computed(() => {
+    let value = obsv();
+    [additions, removals] = shallowDiff(value, prev)
+    additions.forEach(id => handler(index[id], true))
+    removals.forEach(id => handler(index[id], false))
+    prev = value;
+  });
+  cleanup(() => comp.dispose());
+  return id => element => {
+    index[id] = element
+    cleanup(() => index[id] = null);
+  }
+}
+
+// ***************
+// Custom map function for rendering
+// ***************
 ko.observable.fn.map = function(mapFn) {
   var comp, disposables, length, list, mapped;
   mapped = [];
@@ -192,5 +247,3 @@ ko.observable.fn.map = function(mapFn) {
   cleanup(comp.dispose.bind(comp));
   return comp;
 };
-
-export default r;
