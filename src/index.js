@@ -4,10 +4,10 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 let globalContext = null;
 export const r = createRuntime({
   wrap: function(elem, accessor, isAttr, fn) {
-    var comp = ko.computed(function() {
-      var value = accessor();
+    const comp = ko.computed(function() {
+      const value = accessor();
       if (ko.isObservable(value)) {
-        var comp2 = ko.computed(function() {
+        const comp2 = ko.computed(function() {
           fn(elem, value());
         });
         cleanup(comp2.dispose.bind(comp2))
@@ -20,14 +20,14 @@ export const r = createRuntime({
 });
 
 export function root(fn) {
-  var context, d, ret;
+  let context, d, ret;
   context = globalContext;
   globalContext = {
     disposables: d = []
   };
   ret = ko.ignoreDependencies(function() {
     return fn(function() {
-      var disposable, k, len;
+      let disposable, k, len;
       for (k = 0, len = d.length; k < len; k++) {
         disposable = d[k];
         disposable();
@@ -40,7 +40,7 @@ export function root(fn) {
 };
 
 export function cleanup(fn) {
-  var ref;
+  let ref;
   return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
 }
 
@@ -48,10 +48,11 @@ export function cleanup(fn) {
 // Bindings
 // ***************
 function handleEvent(handler, id) {
-  return e => {
+  return function(e) {
     let node = e.target,
       name = `__ev$${e.type}`;
     while (node && node !== this && !(node[name])) node = node.parentNode;
+    if (!node || node === this) return;
     if (node[name] && node[name + 'Id'] === id) handler(node[name], e);
   }
 }
@@ -114,13 +115,13 @@ export function multiSelectOn(obsv, handler) {
 // Custom map function for rendering
 // ***************
 ko.observable.fn.map = function(mapFn) {
-  var comp, disposables, length, list, mapped;
+  let comp, disposables, length, list, mapped;
   mapped = [];
   list = [];
   disposables = [];
   length = 0;
   cleanup(function() {
-    var d, k, len;
+    let d, k, len;
     for (k = 0, len = disposables.length; k < len; k++) {
       d = disposables[k];
       d();
@@ -128,7 +129,7 @@ ko.observable.fn.map = function(mapFn) {
     return disposables = [];
   });
   comp = ko.pureComputed(() => {
-    var d, end, i, indexedItems, item, itemIndex, j, k, l, len, len1, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
+    let d, end, i, indexedItems, item, itemIndex, j, k, l, len, len1, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
     newList = this();
     // non-arrays
     if (!Array.isArray(newList)) {
@@ -151,7 +152,7 @@ ko.observable.fn.map = function(mapFn) {
       }
       disposables = [];
       list[0] = newList;
-      return mapped[0] = r.root(function(dispose) {
+      return mapped[0] = root(function(dispose) {
         disposables[0] = dispose;
         return mapFn(newList);
       });
@@ -172,7 +173,7 @@ ko.observable.fn.map = function(mapFn) {
       i = 0;
       while (i < newLength) {
         list[i] = newList[i];
-        mapped[i] = r.root(function(dispose) {
+        mapped[i] = root(function(dispose) {
           disposables[i] = dispose;
           return mapFn(newList[i], i);
         });
@@ -230,7 +231,7 @@ ko.observable.fn.map = function(mapFn) {
           mapped[j] = newMapped[j];
           disposables[j] = tempDisposables[j];
         } else {
-          mapped[j] = r.root(function(dispose) {
+          mapped[j] = root(function(dispose) {
             disposables[j] = dispose;
             return mapFn(newList[j], j);
           });
