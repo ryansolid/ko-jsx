@@ -3,18 +3,8 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
 let globalContext = null;
 export const r = createRuntime({
-  wrap: function(elem, accessor, isAttr, fn) {
-    const comp = ko.computed(function() {
-      const value = accessor();
-      if (ko.isObservable(value)) {
-        const comp2 = ko.computed(function() {
-          fn(elem, value());
-        });
-        cleanup(comp2.dispose.bind(comp2))
-        return
-      }
-      fn(elem, value);
-    });
+  wrap: function(fn) {
+    const comp = ko.computed(fn);
     cleanup(comp.dispose.bind(comp));
   }
 });
