@@ -3,8 +3,12 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
 
 let globalContext = null;
 export const r = createRuntime({
-  wrap: function(fn) {
-    const comp = ko.computed(fn);
+  wrap(fn) {
+    let comp;
+    if (fn.length) {
+      let current;
+      comp = ko.computed(() => current = fn(current))
+    } else comp = ko.computed(fn);
     cleanup(comp.dispose.bind(comp));
   }
 });
