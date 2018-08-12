@@ -57,20 +57,12 @@ function shallowDiff(a, b) {
 }
 
 let eventId = 0
-export function delegateEvent(eventName, handler) {
-  let attached = null,
-    eId = ++eventId,
-    fn = handleEvent(handler, eId);
-  cleanup(() => attached.removeEventListener(eventName, fn));
-  return data => element => {
-    element[`__ev$${eventName}`] = data;
+export function delegateEvent(element, eventName, handler) {
+  let eId = ++eventId;
+  element.addEventListener(eventName, handleEvent(handler, eId));
+  return (element, value) => {
+    element[`__ev$${eventName}`] = value();
     element[`__ev$${eventName}Id`] = eId;
-    if (attached) return;
-    attached = true
-    Promise.resolve().then(() => {
-      attached = 'getRootNode' in element ? element.getRootNode() : document;
-      attached.addEventListener(eventName, fn);
-    })
   }
 }
 
@@ -82,10 +74,11 @@ export function selectOn(obsv, handler) {
     if (id != null) handler(index[id], true);
     prev = id;
   })
-  cleanup(() => comp.dispose());
-  return id => element => {
-    index[id] = element
-    cleanup(() => index[id] = null);
+  cleanup(comp.dispose.bind(comp));
+  return (element, value) => {
+    let id = value();
+    index[id] = element;
+    cleanup(function() { index[id] = null; });
   }
 }
 
@@ -98,10 +91,11 @@ export function multiSelectOn(obsv, handler) {
     removals.forEach(id => handler(index[id], false))
     prev = value;
   });
-  cleanup(() => comp.dispose());
-  return id => element => {
-    index[id] = element
-    cleanup(() => index[id] = null);
+  cleanup(comp.dispose.bind(comp));
+  return (element, value) => {
+    let id = value();
+    index[id] = element;
+    cleanup(function() { index[id] = null; });
   }
 }
 
