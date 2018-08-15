@@ -61,7 +61,7 @@ export function delegateEvent(element, eventName, handler) {
   let eId = ++eventId;
   element.addEventListener(eventName, handleEvent(handler, eId));
   return (element, value) => {
-    element[`__ev$${eventName}`] = value();
+    element[`__ev$${eventName}`] = ko.ignoreDependencies(value);
     element[`__ev$${eventName}Id`] = eId;
   }
 }
@@ -76,7 +76,7 @@ export function selectOn(obsv, handler) {
   })
   cleanup(comp.dispose.bind(comp));
   return (element, value) => {
-    let id = value();
+    let id = ko.ignoreDependencies(value);
     index[id] = element;
     cleanup(function() { index[id] = null; });
   }
@@ -93,7 +93,7 @@ export function multiSelectOn(obsv, handler) {
   });
   cleanup(comp.dispose.bind(comp));
   return (element, value) => {
-    let id = value();
+    let id = ko.ignoreDependencies(value);
     index[id] = element;
     cleanup(function() { index[id] = null; });
   }
