@@ -1,5 +1,9 @@
-import ko from 'knockout'
-import { createRuntime } from 'babel-plugin-jsx-dom-expressions'
+import { observable, dependencyDetection } from '@tko/observable';
+import { computed, pureComputed } from '@tko/computed';
+import { createRuntime } from 'babel-plugin-jsx-dom-expressions';
+
+export * from '@tko/observable';
+export * from '@tko/computed';
 
 let globalContext = null;
 export const r = createRuntime({
@@ -7,8 +11,8 @@ export const r = createRuntime({
     let comp;
     if (fn.length) {
       let current;
-      comp = ko.computed(() => current = fn(current))
-    } else comp = ko.computed(fn);
+      comp = computed(() => current = fn(current))
+    } else comp = computed(fn);
     cleanup(comp.dispose.bind(comp));
   }
 });
@@ -19,7 +23,7 @@ export function root(fn) {
   globalContext = {
     disposables: d = []
   };
-  ret = ko.ignoreDependencies(function() {
+  ret = dependencyDetection.ignoreDependencies(function() {
     return fn(function() {
       let disposable, k, len;
       for (k = 0, len = d.length; k < len; k++) {
@@ -61,14 +65,14 @@ export function delegateEvent(element, eventName, handler) {
   let eId = ++eventId;
   element.addEventListener(eventName, handleEvent(handler, eId));
   return (element, value) => {
-    element[`__ev$${eventName}`] = ko.ignoreDependencies(value);
+    element[`__ev$${eventName}`] = dependencyDetection.ignoreDependencies(value);
     element[`__ev$${eventName}Id`] = eId;
   }
 }
 
 export function selectOn(obsv, handler) {
   let index = [], prev = null;
-  const comp = ko.computed(() => {
+  const comp = computed(() => {
     let id = obsv()
     if (prev != null && index[prev]) handler(index[prev], false);
     if (id != null) handler(index[id], true);
@@ -76,7 +80,7 @@ export function selectOn(obsv, handler) {
   })
   cleanup(comp.dispose.bind(comp));
   return (element, value) => {
-    let id = ko.ignoreDependencies(value);
+    let id = dependencyDetection.ignoreDependencies(value);
     index[id] = element;
     cleanup(function() { index[id] = null; });
   }
@@ -84,7 +88,7 @@ export function selectOn(obsv, handler) {
 
 export function multiSelectOn(obsv, handler) {
   let index = [], prev = [];
-  const comp = ko.computed(() => {
+  const comp = computed(() => {
     let value = obsv();
     [additions, removals] = shallowDiff(value, prev)
     additions.forEach(id => handler(index[id], true))
@@ -93,7 +97,7 @@ export function multiSelectOn(obsv, handler) {
   });
   cleanup(comp.dispose.bind(comp));
   return (element, value) => {
-    let id = ko.ignoreDependencies(value);
+    let id = dependencyDetection.ignoreDependencies(value);
     index[id] = element;
     cleanup(function() { index[id] = null; });
   }
@@ -102,7 +106,7 @@ export function multiSelectOn(obsv, handler) {
 // ***************
 // Custom map function for rendering
 // ***************
-ko.observable.fn.map = function(mapFn) {
+observable.fn.map = function(mapFn) {
   let comp, disposables, length, list, mapped;
   mapped = [];
   list = [];
@@ -116,7 +120,7 @@ ko.observable.fn.map = function(mapFn) {
     }
     return disposables = [];
   });
-  comp = ko.pureComputed(() => {
+  comp = pureComputed(() => {
     let d, end, i, indexedItems, item, itemIndex, j, k, l, len, len1, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
     newList = this();
     // non-arrays

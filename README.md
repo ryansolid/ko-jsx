@@ -31,7 +31,7 @@ function Greeter({name, onClick}) {
 }
 
 function App() {
-  var name = ko.observable('John');
+  var name = observable('John');
   return(<>
     <h1>Greeting Example</h1>
     <Greeter name={name} onClick={() => name('Jake')}/>
@@ -44,7 +44,7 @@ root(() => mountEl.appendChild(<App />));
 Control flow is handled in an optimized way through the map custom function added to observable. This uses a memoized map to ensure that only the things that change are updated. It only calls the map function in the case of a truthy value. In the case of an array it calls the function per item. In so the map function handles the role of both the 'if' and 'foreach' bindings. Example:
 
 ```js
-var list = ko.observableArray(["Alpha", "Beta", "Gamma"])
+var list = observableArray(["Alpha", "Beta", "Gamma"])
 
 <ul>{
   list.map(item =>
@@ -57,7 +57,7 @@ var list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 
 This does not use any of the Knockout render chain so data-bindings and custom bindings don't work. Knockout Components won't work. Essentially this library only takes the observable change detection part of Knockout. It is compatible with Webcomponents in general. In theory you could call ko.applyBinding and set data-bind attribute value but it seems wasted.
 
-In addition using JSX expressions support directly passing the observable without de-referencing as you are used to with Knockout. However keep in mind all data flow is unidirectional attribute and property setting, so you need to setup event listeners to handle value changes etc.
+It also uses the latest from @tko to leverage es6 modules for smaller package sizes with tree shaking. All observable and computed methods are exposed. Check out [TKO](https://www.tko.io/).
 
 ## Why?
 

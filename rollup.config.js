@@ -6,7 +6,7 @@ export default {
     format: 'cjs',
     file: 'lib/index.js'
   },
-  external: ['knockout', 'babel-plugin-jsx-dom-expressions'],
+  external: ['@tko/observable', '@tko/computed', 'babel-plugin-jsx-dom-expressions'],
   plugins: [
     nodeResolve({ extensions: ['.js'] })
   ]
