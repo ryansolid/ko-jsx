@@ -17,7 +17,7 @@
   "devDependencies": {
     "@tko/computed": "^4.0.0-alpha6.3",
     "babel-plugin-jsx-dom-expressions": "~0.0.29",
-    "rollup": "^0.58.2",
+    "rollup": "^0.64.1",
     "rollup-plugin-node-resolve": "^3.3.0"
   },
   "peerDependencies": {
