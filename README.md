@@ -41,13 +41,13 @@ function App() {
 root(() => mountEl.appendChild(<App />));
 ```
 
-Control flow is handled in an optimized way through the map custom function added to observable. This uses a memoized map to ensure that only the things that change are updated. It only calls the map function in the case of a truthy value. In the case of an array it calls the function per item. In so the map function handles the role of both the 'if' and 'foreach' bindings. Example:
+Control flow is handled in an optimized way through the each('foreach') and when ('if') custom function added to observable. This uses a memoization to ensure that only the things that change are updated. Example:
 
 ```js
 var list = observableArray(["Alpha", "Beta", "Gamma"])
 
 <ul>{
-  list.map(item =>
+  list.each(item =>
     <li>{item}</li>
   )
 }</ul>

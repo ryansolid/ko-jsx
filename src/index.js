@@ -43,113 +43,81 @@ export function cleanup(fn) {
 }
 
 // ***************
-// Bindings
+// Mapping Fns
 // ***************
-function handleEvent(handler, id) {
-  return function(e) {
-    let node = e.target,
-      name = `__ev$${e.type}`;
-    while (node && node !== this && !(node[name])) node = node.parentNode;
-    if (!node || node === this) return;
-    if (node[name] && node[name + 'Id'] === id) handler(node[name], e);
-  }
-}
-
 function shallowDiff(a, b) {
   let sa = new Set(a), sb = new Set(b);
   return [a.filter(i => !sb.has(i)), (b.filter(i => !sa.has(i)))];
 }
 
-let eventId = 0
-export function delegateEvent(element, eventName, handler) {
-  let eId = ++eventId;
-  element.addEventListener(eventName, handleEvent(handler, eId));
-  return (element, value) => {
-    element[`__ev$${eventName}`] = dependencyDetection.ignoreDependencies(value);
-    element[`__ev$${eventName}Id`] = eId;
+export function selectWhen(obsv, handler) {
+  return list => {
+    let element = null;
+    const comp = computed(() => {
+      const model = obsv();
+      if (element) handler(element, false);
+      if (element = model && list().find(el => el.model === model)) handler(element, true);
+    });
+    cleanup(comp.dispose.bind(comp));
+    return list;
   }
 }
 
-export function selectOn(obsv, handler) {
-  let index = [], prev = null;
-  const comp = computed(() => {
-    let id = obsv()
-    if (prev != null && index[prev]) handler(index[prev], false);
-    if (id != null) handler(index[id], true);
-    prev = id;
-  })
-  cleanup(comp.dispose.bind(comp));
-  return (element, value) => {
-    let id = dependencyDetection.ignoreDependencies(value);
-    index[id] = element;
-    cleanup(function() { index[id] = null; });
+export function selectEach(obsv, handler) {
+  return list => {
+    let elements = [];
+    const comp = computed(() => {
+      const models = obsv(),
+        newElements = list().filter(el => models.indexOf(el.model) > -1),
+        [additions, removals] = shallowDiff(newElements, elements);
+      additions.forEach(el => handler(el, true));
+      removals.forEach(el => handler(el, false));
+      elements = newElements;
+    });
+    cleanup(comp.dispose.bind(comp));
+    return list;
   }
 }
 
-export function multiSelectOn(obsv, handler) {
-  let index = [], prev = [];
-  const comp = computed(() => {
-    let value = obsv();
-    [additions, removals] = shallowDiff(value, prev)
-    additions.forEach(id => handler(index[id], true))
-    removals.forEach(id => handler(index[id], false))
-    prev = value;
+// ***************
+// Custom memo methods for rendering
+// ***************
+observable.fn.when = function(mapFn) {
+  let mapped, value, disposable;
+  cleanup(function dispose() {
+    disposable && disposable();
+  });
+  const comp = pureComputed(() => {
+    const newValue = this();
+    if (newValue == null || newValue === false) {
+      disposable && disposable();
+      return value = mapped = disposable = null;
+    }
+    if (value === newValue) return mapped;
+    disposable && disposable();
+    disposable = null;
+    value = newValue;
+    return mapped = root((d) => {
+      disposable = d;
+      return mapFn(value);
+    });
   });
   cleanup(comp.dispose.bind(comp));
-  return (element, value) => {
-    let id = dependencyDetection.ignoreDependencies(value);
-    index[id] = element;
-    cleanup(function() { index[id] = null; });
-  }
+  return comp;
 }
 
-// ***************
-// Custom map function for rendering
-// ***************
-observable.fn.map = function(mapFn) {
-  let comp, disposables, length, list, mapped;
-  mapped = [];
-  list = [];
-  disposables = [];
-  length = 0;
+observable.fn.each = function(mapFn) {
+  let mapped = [],
+    list = [],
+    disposables = [],
+    length = 0;
   cleanup(function() {
-    let d, k, len;
-    for (k = 0, len = disposables.length; k < len; k++) {
-      d = disposables[k];
-      d();
-    }
-    return disposables = [];
+    for (let k = 0, len = disposables.length; k < len; k++) disposables[k]();
   });
   comp = pureComputed(() => {
-    let d, end, i, indexedItems, item, itemIndex, j, k, l, len, len1, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
+    let d, end, i, indexedItems, item, itemIndex, j, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
     newList = this();
-    // non-arrays
-    if (!Array.isArray(newList)) {
-      if ((newList == null) || newList === false) {
-        mapped = [];
-        list = [];
-        for (k = 0, len = disposables.length; k < len; k++) {
-          d = disposables[k];
-          d();
-        }
-        disposables = [];
-        return;
-      }
-      if (list[0] === newList) {
-        return mapped[0];
-      }
-      for (l = 0, len1 = disposables.length; l < len1; l++) {
-        d = disposables[l];
-        d();
-      }
-      disposables = [];
-      list[0] = newList;
-      return mapped[0] = root(function(dispose) {
-        disposables[0] = dispose;
-        return mapFn(newList);
-      });
-    }
-    newLength = newList.length;
+    newLength = (newList && newList.length) || 0;
     if (newLength === 0) {
       if (length !== 0) {
         list = [];
