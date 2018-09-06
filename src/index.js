@@ -114,7 +114,7 @@ observable.fn.each = function(mapFn) {
   cleanup(function() {
     for (let k = 0, len = disposables.length; k < len; k++) disposables[k]();
   });
-  comp = pureComputed(() => {
+  const comp = pureComputed(() => {
     let d, end, i, indexedItems, item, itemIndex, j, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
     newList = this();
     newLength = (newList && newList.length) || 0;
