@@ -57,8 +57,6 @@ var list = observableArray(["Alpha", "Beta", "Gamma"])
 
 This does not use any of the Knockout render chain so data-bindings and custom bindings don't work. Knockout Components won't work. Essentially this library only takes the observable change detection part of Knockout. It is compatible with Webcomponents in general. In theory you could call ko.applyBinding and set data-bind attribute value but it seems wasted.
 
-It also uses the latest from @tko to leverage es6 modules for smaller package sizes with tree shaking. All observable and computed methods are exposed. Check out [TKO](https://www.tko.io/).
-
 ## Why?
 
 Knockout.js at it's core is an elegant and efficient solution to tracking change detection. It also as far as modern declarative javascript libraries is one of the oldest.  While it's continued to improve over time, in recent years Virtual DOM approaches have gained more popularity. Conceptually it always seemed that Knockout should outperform those techniques but in many areas it's been a dog in benchmarks.  After seeing the great [Surplus.js](https://github.com/adamhaile/surplus) it was clear that these sort of libraries still had steam. In the process of working through my own library I realized the approaches used could be generalized to any fine grained library.

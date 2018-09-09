@@ -1,9 +1,5 @@
-import { observable, dependencyDetection } from '@tko/observable';
-import { computed, pureComputed } from '@tko/computed';
+import ko from 'knockout'
 import { createRuntime } from 'babel-plugin-jsx-dom-expressions';
-
-export * from '@tko/observable';
-export * from '@tko/computed';
 
 let globalContext = null;
 export const r = createRuntime({
@@ -11,8 +7,8 @@ export const r = createRuntime({
     let comp;
     if (fn.length) {
       let current;
-      comp = computed(() => current = fn(current))
-    } else comp = computed(fn);
+      comp = ko.computed(() => current = fn(current))
+    } else comp = ko.computed(fn);
     cleanup(comp.dispose.bind(comp));
   }
 });
@@ -23,7 +19,7 @@ export function root(fn) {
   globalContext = {
     disposables: d = []
   };
-  ret = dependencyDetection.ignoreDependencies(function() {
+  ret = ko.ignoreDependencies(function() {
     return fn(function() {
       let disposable, k, len;
       for (k = 0, len = d.length; k < len; k++) {
@@ -53,7 +49,7 @@ function shallowDiff(a, b) {
 export function selectWhen(obsv, handler) {
   return list => {
     let element = null;
-    const comp = computed(() => {
+    const comp = ko.computed(() => {
       const model = obsv();
       if (element) handler(element, false);
       if (element = model && list().find(el => el.model === model)) handler(element, true);
@@ -66,7 +62,7 @@ export function selectWhen(obsv, handler) {
 export function selectEach(obsv, handler) {
   return list => {
     let elements = [];
-    const comp = computed(() => {
+    const comp = ko.computed(() => {
       const models = obsv(),
         newElements = list().filter(el => models.indexOf(el.model) > -1),
         [additions, removals] = shallowDiff(newElements, elements);
@@ -82,12 +78,12 @@ export function selectEach(obsv, handler) {
 // ***************
 // Custom memo methods for rendering
 // ***************
-observable.fn.when = function(mapFn) {
+ko.observable.fn.when = function(mapFn) {
   let mapped, value, disposable;
   cleanup(function dispose() {
     disposable && disposable();
   });
-  const comp = pureComputed(() => {
+  const comp = ko.pureComputed(() => {
     const newValue = this();
     if (newValue == null || newValue === false) {
       disposable && disposable();
@@ -106,7 +102,7 @@ observable.fn.when = function(mapFn) {
   return comp;
 }
 
-observable.fn.each = function(mapFn) {
+ko.observable.fn.each = function(mapFn) {
   let mapped = [],
     list = [],
     disposables = [],
@@ -114,7 +110,7 @@ observable.fn.each = function(mapFn) {
   cleanup(function() {
     for (let k = 0, len = disposables.length; k < len; k++) disposables[k]();
   });
-  const comp = pureComputed(() => {
+  const comp = ko.pureComputed(() => {
     let d, end, i, indexedItems, item, itemIndex, j, len2, m, newEnd, newLength, newList, newMapped, start, tempDisposables;
     newList = this();
     newLength = (newList && newList.length) || 0;
