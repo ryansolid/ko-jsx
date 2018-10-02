@@ -18,7 +18,7 @@ There is no ko.applyBinding. Instead the app starts with:
 
 ```js
 root(() => {
-  var app = new AppViewModel()
+  const app = new AppViewModel()
   mountEl.appendChild(app.render())
 })
 ```
@@ -26,30 +26,27 @@ root(() => {
 There is no opinion on how you set up your View Models, so I just used a render function in this example to demonstrate. Your ViewModel could be a functional Component ala React if you wanted to, as the library supports any mixed case function as a JSX tag. For example:
 
 ```js
-function Greeter({name, onClick}) {
-  return (<div onClick={onClick}>Hello {name() ? name() : 'World'}</div>);
-}
+const Greeter = ({name, onClick}) =>
+  <div onClick={onClick}>Hello {name() || 'World'}</div>
 
 function App() {
-  var name = observable('John');
-  return(<>
+  const name = ko.observable('John');
+  return <>
     <h1>Greeting Example</h1>
     <Greeter name={name} onClick={() => name('Jake')}/>
-  </>);
+  </>;
 }
 
 root(() => mountEl.appendChild(<App />));
 ```
 
-Control flow is handled in an optimized way through the each('foreach') and when ('if') custom function added to observable. This uses a memoization to ensure that only the things that change are updated. Example:
+Control flow is handled in an optimized way through the each('foreach') and when('if') custom function added to observable. This uses a memoization to ensure that only the things that change are updated. Example:
 
 ```js
-var list = observableArray(["Alpha", "Beta", "Gamma"])
+const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 
 <ul>{
-  list.each(item =>
-    <li>{item}</li>
-  )
+  list.each(item => <li>{item}</li>)
 }</ul>
 ```
 
