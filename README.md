@@ -2,7 +2,7 @@
 
 This library is a replacement for Knockout.js' renderer. It trades Knockout's data-bind and DOM traversing for precompiled JSX. Using these techniques allows for dramatic performance improvements across the board putting Knockout in the company of some of the fastest libraries. See [JS Frameworks Benchmark](https://github.com/krausest/js-framework-benchmark).
 
-It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://github.com/ryansolid/babel-plugin-jsx-dom-expressions). It compiles JSX to DOM statements and wraps expressions in functions that can be called by the library of choice. In this case ko.computed wrap these expressions ensuring the view stays up to date. Unlike Virtual DOM only the changed nodes are affected and the whole tree is not re-rendered over and over.
+It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://github.com/ryansolid/babel-plugin-jsx-dom-expressions). It compiles JSX to DOM statements and by using inner parenthesis syntax ```{( )}``` wraps expressions in functions that can be called by the library of choice. In this case ko.computed wrap these expressions ensuring the view stays up to date. Unlike Virtual DOM only the changed nodes are affected and the whole tree is not re-rendered over and over.
 
 To use simply import the package as r:
 
@@ -25,15 +25,15 @@ root(() => {
 
 There is no opinion on how you set up your View Models, so I just used a render function in this example to demonstrate. Your ViewModel could be a functional Component ala React if you wanted to, as the library supports any mixed case function as a JSX tag. For example:
 
-```js
+```jsx
 const Greeter = ({name, onClick}) =>
-  <div onClick={onClick}>Hello {name() || 'World'}</div>
+  <div onClick={onClick}>Hello {(name() || 'World')}</div>
 
 function App() {
   const name = ko.observable('John');
   return <>
     <h1>Greeting Example</h1>
-    <Greeter name={name} onClick={() => name('Jake')}/>
+    <Greeter name={( name() )} onClick={() => name('Jake')}/>
   </>;
 }
 

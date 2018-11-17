@@ -4,11 +4,8 @@ import { createRuntime } from 'babel-plugin-jsx-dom-expressions';
 let globalContext = null;
 export const r = createRuntime({
   wrap(fn) {
-    let comp;
-    if (fn.length) {
-      let current;
-      comp = ko.computed(() => current = fn(current))
-    } else comp = ko.computed(fn);
+    let current,
+      comp = ko.computed(() => current = fn(current));
     cleanup(comp.dispose.bind(comp));
   }
 });
@@ -41,12 +38,17 @@ export function cleanup(fn) {
 // ***************
 // Mapping Fns
 // ***************
+function createHandler(className) {
+  return (e, s) => e.classList.toggle(className, s)
+}
+
 function shallowDiff(a, b) {
   let sa = new Set(a), sb = new Set(b);
   return [a.filter(i => !sb.has(i)), (b.filter(i => !sa.has(i)))];
 }
 
 export function selectWhen(obsv, handler) {
+  if (typeof handler === 'string') handler = createHandler(handler);
   return list => {
     let element = null;
     const comp = ko.computed(() => {
@@ -60,6 +62,7 @@ export function selectWhen(obsv, handler) {
 }
 
 export function selectEach(obsv, handler) {
+  if (typeof handler === 'string') handler = createHandler(handler);
   return list => {
     let elements = [];
     const comp = ko.computed(() => {
@@ -126,14 +129,11 @@ ko.observable.fn.each = function(mapFn) {
         disposables = [];
       }
     } else if (length === 0) {
-      i = 0;
-      while (i < newLength) {
-        list[i] = newList[i];
-        mapped[i] = root(function(dispose) {
-          disposables[i] = dispose;
-          return mapFn(newList[i], i);
-        });
-        i++;
+      j = 0;
+      while (j < newLength) {
+        list[j] = newList[j];
+        mapped[j] = root(mappedFn);
+        j++;
       }
       length = newLength;
     } else {
@@ -187,10 +187,7 @@ ko.observable.fn.each = function(mapFn) {
           mapped[j] = newMapped[j];
           disposables[j] = tempDisposables[j];
         } else {
-          mapped[j] = root(function(dispose) {
-            disposables[j] = dispose;
-            return mapFn(newList[j], j);
-          });
+          mapped[j] = root(mappedFn);
         }
         j++;
       }
@@ -200,6 +197,11 @@ ko.observable.fn.each = function(mapFn) {
       list = newList.slice(0);
     }
     return mapped;
+
+    function mappedFn(dispose) {
+      disposables[j] = dispose;
+      return mapFn(newList[j], j);
+    }
   });
   cleanup(comp.dispose.bind(comp));
   return comp;
