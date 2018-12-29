@@ -40,14 +40,14 @@ function App() {
 root(() => mountEl.appendChild(<App />));
 ```
 
-Control flow is handled in an optimized way through the each('foreach') and when('if') custom function added to observable. This uses a memoization to ensure that only the things that change are updated. Example:
+Control flow is handled through a special $ JSX element that compiles down to optimized reconciled code. Example:
 
-```js
+```jsx
 const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 
-<ul>{
-  list.each(item => <li>{item}</li>)
-}</ul>
+<ul>
+  <$ each={list()}>{item => <li>{item}</li>}</$>
+</ul>
 ```
 
 ## Compatibility
@@ -57,9 +57,5 @@ This does not use any of the Knockout render chain so data-bindings and custom b
 ## Why?
 
 Knockout.js at it's core is an elegant and efficient solution to tracking change detection. It also as far as modern declarative javascript libraries is one of the oldest.  While it's continued to improve over time, in recent years Virtual DOM approaches have gained more popularity. Conceptually it always seemed that Knockout should outperform those techniques but in many areas it's been a dog in benchmarks.  After seeing the great [Surplus.js](https://github.com/adamhaile/surplus) it was clear that these sort of libraries still had steam. In the process of working through my own library I realized the approaches used could be generalized to any fine grained library.
-
-The key reasons this library has significantly better performance is:
-* Precompiled DOM statements are much faster than walking over existing DOM elements. DOM Nodes are only rendered afer they are processed.
-* Context based rendering (ie.. $parent, $data, etc...) requires a lot of cloning, which is slow and memory intensive. Capturing context via function closure ends up more performant.
 
 Mostly this library is a demonstration of a concept. Fine grained detection libraries shouldn't shy from the technological advancement Virtual DOM libraries brought, when even the oldest of the fine grained libraries still has considerable game in this light.
