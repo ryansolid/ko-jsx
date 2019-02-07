@@ -1,5 +1,5 @@
 import ko from 'knockout'
-import { createRuntime } from 'babel-plugin-jsx-dom-expressions';
+import { createRuntime, createHyperScript } from 'babel-plugin-jsx-dom-expressions';
 
 let globalContext = null;
 export const r = createRuntime({
@@ -11,6 +11,8 @@ export const r = createRuntime({
   sample: ko.ignoreDependencies,
   root, cleanup
 });
+
+export const h = createHyperScript(r);
 
 export function root(fn) {
   let context, d, ret;

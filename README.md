@@ -33,7 +33,7 @@ function App() {
   const name = ko.observable('John');
   return <>
     <h1>Greeting Example</h1>
-    <Greeter name={( name() )} onClick={() => name('Jake')}/>
+    <Greeter name={name} onClick={() => name('Jake')}/>
   </>;
 }
 
@@ -48,6 +48,26 @@ const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 <ul>
   <$ each={list()}>{item => <li>{item}</li>}</$>
 </ul>
+```
+
+Alternately the library supports HyperScript. While it is unable to match all the performance optimizations that come with precompiled JSX, it is an option for those who do not wish to use Babel. It isn't 100% parity. Refer to the docs on [Babel Plugin JSX DOM Expressions](https://github.com/ryansolid/babel-plugin-jsx-dom-expressions).
+
+```js
+import { h } from 'ko-jsx'
+
+const Greeter = (name, onClick) =>
+  h('div', {onClick}, ['Hello', () => name() || 'World']);
+
+function App() {
+  const name = ko.observable('John');
+  return h('div', [
+    h('h1', 'Greeting Example'),
+    Greeter(name, () => name('Jake'))
+  ]);
+}
+
+root(() => mountEl.appendChild(App()));
+
 ```
 
 ## Compatibility
