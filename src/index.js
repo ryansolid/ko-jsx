@@ -1,5 +1,5 @@
 import ko from 'knockout'
-import { createRuntime, createHyperScript } from 'babel-plugin-jsx-dom-expressions';
+import { createRuntime, createHyperScript } from 'dom-expressions';
 
 let globalContext = null;
 export const r = createRuntime({

@@ -12,6 +12,11 @@ import { r } from 'ko-jsx'
 
 And include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel loader, or rollup babel plugin.
 
+# Installation
+```sh
+> npm install ko-jsx babel-plugin-jsx-dom-expressions
+```
+
 ## API
 
 There is no ko.applyBinding. Instead the app starts with:
@@ -50,7 +55,7 @@ const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 </ul>
 ```
 
-Alternately the library supports HyperScript. While it is unable to match all the performance optimizations that come with precompiled JSX, it is an option for those who do not wish to use Babel. It isn't 100% parity. Refer to the docs on [Babel Plugin JSX DOM Expressions](https://github.com/ryansolid/babel-plugin-jsx-dom-expressions).
+Alternately the library supports HyperScript. While it is unable to match all the performance optimizations that come with precompiled JSX, it is an option for those who do not wish to use Babel. It isn't 100% parity. Refer to the docs on [DOM Expressions](https://github.com/ryansolid/dom-expressions).
 
 ```js
 import { h } from 'ko-jsx'
