@@ -31,6 +31,8 @@ root(() => {
 There is no opinion on how you set up your View Models, so I just used a render function in this example to demonstrate. Your ViewModel could be a functional Component ala React if you wanted to, as the library supports any mixed case function as a JSX tag. For example:
 
 ```jsx
+import { r, root } from 'ko-jsx'
+
 const Greeter = ({name, onClick}) =>
   <div onClick={onClick}>Hello {(name() || 'World')}</div>
 
@@ -55,10 +57,11 @@ const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 </ul>
 ```
 
-Alternately the library supports HyperScript. While it is unable to match all the performance optimizations that come with precompiled JSX, it is an option for those who do not wish to use Babel. It isn't 100% parity. Refer to the docs on [DOM Expressions](https://github.com/ryansolid/dom-expressions).
+For those who do not wish to use Babel to precompile, the Knockout JSX supports Tagged Template Literals or HyperScript render APIs. These are available when you install the companion library and throw import of 'ko-jsx/html' and 'ko-jsx/h'. Refer to the docs on [Lit DOM Expressions](https://github.com/ryansolid/lit-dom-expressions), and [Hyper DOM Expressions](https://github.com/ryansolid/hyper-dom-expressions), respectively.
 
 ```js
-import { h } from 'ko-jsx'
+import ko from 'knockout';
+import { h, root } from 'ko-jsx/h';
 
 const Greeter = (name, onClick) =>
   h('div', {onClick}, ['Hello', () => name() || 'World']);

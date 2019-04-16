@@ -1,0 +1,6 @@
+{
+  "name": "ko-jsx/h",
+  "main": "../lib/h.js",
+  "module": "../src/h.js",
+  "sideEffects": false
+}
