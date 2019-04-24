@@ -1,10 +1,13 @@
-import ko from 'knockout'
+import * as ko from 'knockout'
 import { createRuntime } from 'dom-expressions';
 
-let globalContext = null;
+type Context = { disposables: any[] };
+type DelegatableNode = Node & { model: any }
+
+let globalContext: Context;
 export const r = createRuntime({
-  wrap(fn) {
-    let current,
+  wrap<T>(fn: (prev?: T) => T) {
+    let current: T,
       comp = ko.computed(() => current = fn(current));
     cleanup(comp.dispose.bind(comp));
   },
@@ -12,8 +15,8 @@ export const r = createRuntime({
   root, cleanup
 });
 
-export function root(fn) {
-  let context, d, ret;
+export function root<T>(fn: (dispose: () => void) => T) {
+  let context, d: any[], ret: T;
   context = globalContext;
   globalContext = {
     disposables: d = []
@@ -32,7 +35,7 @@ export function root(fn) {
   return ret;
 };
 
-export function cleanup(fn) {
+export function cleanup(fn: () => void) {
   let ref;
   return (ref = globalContext) != null ? ref.disposables.push(fn) : void 0;
 }
@@ -40,26 +43,28 @@ export function cleanup(fn) {
 // ***************
 // Mapping Fns
 // ***************
-function createHandler(className) {
-  return (e, s) => e.classList.toggle(className, s)
+function createHandler(className: string) {
+  return (e: HTMLElement, s: boolean) => e.classList.toggle(className, s)
 }
 
-function shallowDiff(a, b) {
+function shallowDiff(a: HTMLElement[], b: HTMLElement[]) {
   let sa = new Set(a), sb = new Set(b);
   return [a.filter(i => !sb.has(i)), (b.filter(i => !sa.has(i)))];
 }
 
-export function selectWhen(obsv, handler) {
+export function selectWhen(obsv: () => any, handler: string) : (s: Node, e: Node | null) => void
+export function selectWhen(obsv: () => any, handler: (element: HTMLElement, selected: boolean) => void) : (s: Node, e: Node | null) => void
+export function selectWhen(obsv: () => any, handler: any) : (s: Node, e: Node | null) => void {
   if (typeof handler === 'string') handler = createHandler(handler);
-  let start, end, element = null;
+  let start: Node, end: Node | null, element: HTMLElement | null = null;
   const comp = ko.computed(() => {
     const model = obsv();
     if (element) handler(element, false);
-    let marker = start;
+    let marker: Node | null = start;
     while(marker && marker !== end) {
-      if (marker.model === model) {
+      if ((marker as DelegatableNode).model === model) {
         handler(marker, true);
-        return element = marker;
+        return element = marker as HTMLElement;
       }
       marker = marker.nextSibling;
     }
@@ -69,14 +74,16 @@ export function selectWhen(obsv, handler) {
   return (s, e) => (start = s, end = e);
 }
 
-export function selectEach(obsv, handler) {
+export function selectEach(obsv: () => any, handler: string) : (s: Node, e: Node | null) => void
+export function selectEach(obsv: () => any, handler: (element: HTMLElement, selected: boolean) => void) : (s: Node, e: Node | null) => void
+export function selectEach(obsv: () => any, handler: any) : (s: Node, e: Node | null) => void {
   if (typeof handler === 'string') handler = createHandler(handler);
-  let start, end, elements = [];
+  let start: Node, end: Node | null, elements: HTMLElement[] = [];
   const comp = ko.computed(() => {
     const models = obsv(), newElements = [];
-    let marker = start;
+    let marker: Node | null = start
     while(marker && marker !== end) {
-      if (models.indexOf(marker.model) > -1) newElements.push(marker);
+      if (models.indexOf((marker as DelegatableNode).model) > -1) newElements.push(marker as HTMLElement);
       marker = marker.nextSibling;
     }
     const [additions, removals] = shallowDiff(newElements, elements);

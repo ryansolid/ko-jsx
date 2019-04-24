@@ -1,5 +1,5 @@
 import { createHyperScript } from 'hyper-dom-expressions';
-import { r } from 'ko-jsx';
-export * from 'ko-jsx';
+import { r } from './index';
+export * from './index';
 
 export const h = createHyperScript(r);
