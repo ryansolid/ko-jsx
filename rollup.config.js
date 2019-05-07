@@ -22,7 +22,7 @@ export default [{
     format: 'es',
     file: 'dist/index.js'
   }],
-  external: ['knockout', 'dom-expressions'],
+  external: ['knockout'],
   plugins
 }, {
   input: 'src/html.ts',
