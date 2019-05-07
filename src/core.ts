@@ -1,3 +1,5 @@
+import * as ko from 'knockout';
+
 type Context = { disposables: any[] };
 let globalContext: Context;
 
