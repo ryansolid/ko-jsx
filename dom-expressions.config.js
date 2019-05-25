@@ -4,11 +4,14 @@ module.exports = {
   variables: {
     imports: [
       `import * as ko from 'knockout'`,
-      `import { root as koRoot, cleanup as koCleanup, computed as koComputed } from './core'`
+      `import {
+        root, cleanup, computed as wrap, setContext,
+        registerSuspense, getContextOwner as currentContext
+      } from './core'`
     ],
-    computed: 'koComputed',
-    sample: 'ko.ignoreDependencies',
-    root: 'koRoot',
-    cleanup: 'koCleanup'
+    declarations: {
+      sample: 'ko.ignoreDependencies'
+    },
+    includeContext: true
   }
 }
