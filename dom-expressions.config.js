@@ -3,15 +3,12 @@ module.exports = {
   includeTypes: true,
   variables: {
     imports: [
-      `import * as ko from 'knockout'`,
+      `import { ignoreDependencies as sample } from 'knockout'`,
       `import {
         root, cleanup, computed as wrap, setContext,
         registerSuspense, getContextOwner as currentContext
       } from './core'`
     ],
-    declarations: {
-      sample: 'ko.ignoreDependencies'
-    },
     includeContext: true
   }
 }

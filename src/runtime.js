@@ -1,11 +1,11 @@
 import { Attributes } from 'dom-expressions';
-import * as ko from 'knockout';
+import { ignoreDependencies as sample } from 'knockout';
 import {
         root, cleanup, computed as wrap, setContext,
         registerSuspense, getContextOwner as currentContext
       } from './core';
 
-const sample = ko.ignoreDependencies;
+
 
 const GROUPING = '__rGroup',
   FORWARD = 'nextSibling',

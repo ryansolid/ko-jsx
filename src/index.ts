@@ -1,6 +1,5 @@
-import * as ko from 'knockout';
-import { cleanup } from './core';
-export { cleanup, root } from './core'
+import { computed } from './core';
+export * from './core'
 export * from './runtime'
 
 type DelegatableNode = Node & { model: any }
@@ -22,7 +21,7 @@ export function selectWhen(obsv: () => any, handler: (element: HTMLElement, sele
 export function selectWhen(obsv: () => any, handler: any) : (s: Node, e: Node | null) => void {
   if (typeof handler === 'string') handler = createHandler(handler);
   let start: Node, end: Node | null, element: HTMLElement | null = null;
-  const comp = ko.computed(() => {
+  computed(() => {
     const model = obsv();
     if (element) handler(element, false);
     let marker: Node | null = start;
@@ -35,7 +34,6 @@ export function selectWhen(obsv: () => any, handler: any) : (s: Node, e: Node | 
     }
     element = null;
   });
-  cleanup(comp.dispose.bind(comp));
   return (s, e) => (start = s, end = e);
 }
 
@@ -44,7 +42,7 @@ export function selectEach(obsv: () => any, handler: (element: HTMLElement, sele
 export function selectEach(obsv: () => any, handler: any) : (s: Node, e: Node | null) => void {
   if (typeof handler === 'string') handler = createHandler(handler);
   let start: Node, end: Node | null, elements: HTMLElement[] = [];
-  const comp = ko.computed(() => {
+  computed(() => {
     const models = obsv(), newElements = [];
     let marker: Node | null = start
     while(marker && marker !== end) {
@@ -56,6 +54,5 @@ export function selectEach(obsv: () => any, handler: any) : (s: Node, e: Node | 
     removals.forEach(el => handler(el, false));
     elements = newElements;
   });
-  cleanup(comp.dispose.bind(comp));
   return (s, e) => (start = s, end = e);
 }

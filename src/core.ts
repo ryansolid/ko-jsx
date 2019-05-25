@@ -1,4 +1,4 @@
-import * as ko from 'knockout';
+import { ignoreDependencies, computed as koComputed, observable } from 'knockout';
 
 type ContextOwner = { disposables: any[], owner: ContextOwner | null, context?: any };
 interface Context { id: symbol, initFn: Function };
@@ -13,7 +13,7 @@ export function root<T>(fn: (dispose: () => void) => T) {
     disposables: d = [],
     owner: globalContext
   };
-  ret = ko.ignoreDependencies(() =>
+  ret = ignoreDependencies(() =>
     fn(() => {
       let k, len: number;
       for (k = 0, len = d.length; k < len; k++) d[k]();
@@ -35,7 +35,7 @@ export function computed<T>(fn: (prev?: T) => T) {
       disposables: d = [],
       owner: globalContext
     },
-    comp = ko.computed(() => {
+    comp = koComputed(() => {
       for (let k = 0, len = d.length; k < len; k++) d[k]();
       d = [];
       globalContext = context;
@@ -71,7 +71,7 @@ export function useContext(context: Context) {
 // Suspense Context
 export const SuspenseContext = createContext(() => {
   let counter = 0;
-  const obsv = ko.observable(0),
+  const obsv = observable(0),
     store = {
       increment: () => ++counter === 1 && !store.initializing && obsv(counter),
       decrement: () => --counter === 0 && obsv(counter),
@@ -106,8 +106,8 @@ export function lazy<T extends Function>(fn: () => Promise<{default: T}>) {
 // load any async resource and return an accessor
 export function loadResource<T>(p: Promise<T>) {
   const { increment, decrement } = useContext(SuspenseContext) || { increment: undefined, decrement: undefined};
-  const results = ko.observable<T | undefined>(),
-    error = ko.observable<any>();
+  const results = observable<T | undefined>(),
+    error = observable<any>();
   increment && increment();
   p.then(data => results(data))
     .catch(err => error(err))
