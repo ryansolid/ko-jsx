@@ -1,7 +1,7 @@
 {
   "name": "ko-jsx",
   "description": "An alternative JSX renderer for Knockout.js",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "author": "Ryan Carniato",
   "license": "MIT",
   "repository": {
@@ -19,14 +19,14 @@
     "@babel/core": "7.4.5",
     "@babel/preset-typescript": "7.3.3",
     "@types/knockout": "3.4.53",
-    "dom-expressions": "~0.9.1",
-    "hyper-dom-expressions": "~0.9.1",
-    "lit-dom-expressions": "~0.9.1",
+    "dom-expressions": "~0.9.7",
+    "hyper-dom-expressions": "~0.9.2",
+    "lit-dom-expressions": "~0.9.2",
     "knockout": "3.4.2",
     "rollup": "^1.12.3",
     "rollup-plugin-babel": "4.3.2",
     "rollup-plugin-node-resolve": "5.0.0",
-    "typescript": "3.4.4"
+    "typescript": "3.5.1"
   },
   "peerDependencies": {
     "knockout": "3.x"
