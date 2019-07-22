@@ -20,16 +20,13 @@ To use include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel
 There is no ko.applyBinding. Instead the app starts with:
 
 ```js
-root(() => {
-  const app = new AppViewModel()
-  mountEl.appendChild(app.render())
-})
+render(AppViewModel, mountEl)
 ```
 
-There is no opinion on how you set up your View Models, so I just used a render function in this example to demonstrate. Your ViewModel could be a functional Component ala React if you wanted to, as the library supports any mixed case function as a JSX tag. For example:
+For example:
 
 ```jsx
-import { root } from 'ko-jsx'
+import { render } from 'ko-jsx'
 
 const Greeter = ({name, onClick}) =>
   <div onClick={onClick}>Hello {(name() || 'World')}</div>
@@ -42,24 +39,24 @@ function App() {
   </>;
 }
 
-root(() => mountEl.appendChild(<App />));
+render(App, document.getElementById('main'));
 ```
 
-Control flow is handled through a special $ JSX element that compiles down to optimized reconciled code. Example:
+Control flow works the way you generally would JSX. However for performant list rendering I have added a fn on `subscribable` called `memoMap` that will optimally handle arrays.
 
 ```jsx
 const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
 
-<ul>
-  <$ each={list()}>{item => <li>{item}</li>}</$>
-</ul>
+<ul>{
+  list.memoMap(item => <li>{item}</li>)
+}</ul>
 ```
 
 For those who do not wish to use Babel to precompile, the Knockout JSX supports Tagged Template Literals or HyperScript render APIs. These are available when you install the companion library and throw import of 'ko-jsx/html' and 'ko-jsx/h'. Refer to the docs on [Lit DOM Expressions](https://github.com/ryansolid/lit-dom-expressions), and [Hyper DOM Expressions](https://github.com/ryansolid/hyper-dom-expressions), respectively.
 
 ```js
 import ko from 'knockout';
-import { h, root } from 'ko-jsx/h';
+import { h, render } from 'ko-jsx/h';
 
 const Greeter = (name, onClick) =>
   h('div', {onClick}, ['Hello', () => name() || 'World']);
@@ -72,8 +69,7 @@ function App() {
   ]);
 }
 
-root(() => mountEl.appendChild(App()));
-
+render(App, document.getElementById('main'));
 ```
 
 ## Compatibility
