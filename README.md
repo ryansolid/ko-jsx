@@ -51,6 +51,10 @@ const list = ko.observableArray(["Alpha", "Beta", "Gamma"])
   list.memoMap(item => <li>{item}</li>)
 }</ul>
 ```
+### Example
+[Counter](https://codesandbox.io/s/knockout-jsx-counter-dqtc2)
+
+### Non-Precompiled
 
 For those who do not wish to use Babel to precompile, the Knockout JSX supports Tagged Template Literals or HyperScript render APIs. These are available when you install the companion library and throw import of 'ko-jsx/html' and 'ko-jsx/h'. Refer to the docs on [Lit DOM Expressions](https://github.com/ryansolid/lit-dom-expressions), and [Hyper DOM Expressions](https://github.com/ryansolid/hyper-dom-expressions), respectively.
 
@@ -58,14 +62,14 @@ For those who do not wish to use Babel to precompile, the Knockout JSX supports 
 import ko from 'knockout';
 import { h, render } from 'ko-jsx/h';
 
-const Greeter = (name, onClick) =>
-  h('div', {onClick}, ['Hello', () => name() || 'World']);
+const Greeter = (name, onclick) =>
+  h('div', {onclick}, 'Hello', () => name() || 'World');
 
 function App() {
   const name = ko.observable('John');
   return h('div', [
     h('h1', 'Greeting Example'),
-    Greeter(name, () => name('Jake'))
+    h(Greeter, {name, onclick: () => name('Jake')})
   ]);
 }
 
