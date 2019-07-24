@@ -1,12 +1,27 @@
-import { ignoreDependencies, computed as koComputed, subscribable } from 'knockout';
+import {
+  ignoreDependencies,
+  computed as koComputed,
+  subscribable
+} from "knockout";
 
 // patch ignoreDependencies
-declare module 'knockout' {
-  function ignoreDependencies<T>(callback: Function, callbackTarget?: any, callbackArgs?: any[] | undefined): T
+declare module "knockout" {
+  function ignoreDependencies<T>(
+    callback: Function,
+    callbackTarget?: any,
+    callbackArgs?: any[] | undefined
+  ): T;
 }
 
-type ContextOwner = { disposables: any[], owner: ContextOwner | null, context?: any };
-export interface Context { id: symbol, Provide: (props: any) => any };
+type ContextOwner = {
+  disposables: any[];
+  owner: ContextOwner | null;
+  context?: any;
+};
+export interface Context {
+  id: symbol;
+  Provide: (props: any) => any;
+}
 
 let globalContext: ContextOwner | null = null;
 
@@ -25,7 +40,7 @@ export function root<T>(fn: (dispose: () => void) => T) {
   );
   globalContext = globalContext.owner;
   return ret;
-};
+}
 
 export function cleanup(fn: () => void) {
   let ref;
@@ -42,7 +57,7 @@ export function computed<T>(fn: (prev?: T) => T) {
       for (let k = 0, len = d.length; k < len; k++) d[k]();
       d = [];
       globalContext = context;
-      current = fn(current)
+      current = fn(current);
       globalContext = globalContext.owner;
     });
   cleanup(() => {
@@ -52,17 +67,23 @@ export function computed<T>(fn: (prev?: T) => T) {
 }
 
 export function createContext(initFn?: Function): Context {
-  const id = Symbol('context');
+  const id = Symbol("context");
   return { id, Provide: createProvider(id, initFn) };
 }
 
 export function useContext(context: Context) {
-  if (globalContext === null) return console.warn("Context keys cannot be looked up without a root or parent");
+  if (globalContext === null)
+    return console.warn(
+      "Context keys cannot be looked up without a root or parent"
+    );
   return lookup(globalContext, context.id);
 }
 
 function lookup(owner: ContextOwner, key: symbol | string): any {
-  return (owner && owner.context && owner.context[key]) || (owner.owner && lookup(owner.owner, key));
+  return (
+    (owner && owner.context && owner.context[key]) ||
+    (owner.owner && lookup(owner.owner, key))
+  );
 }
 
 function createProvider(id: symbol, initFn?: Function) {
@@ -76,12 +97,12 @@ function createProvider(id: symbol, initFn?: Function) {
       });
     });
     return rendered;
-  }
+  };
 }
 
 // Modified version of mapSample from S-array[https://github.com/adamhaile/S-array] by Adam Haile
 (subscribable.fn as any).memoMap = function<T, U>(
-  mapFn: (v: T, i: number) => U,
+  mapFn: (v: T, i: number) => U
 ): () => U[] {
   let items = [] as T[],
     mapped = [] as U[],
@@ -89,7 +110,7 @@ function createProvider(id: symbol, initFn?: Function) {
     len = 0;
   cleanup(() => {
     for (let i = 0, length = disposers.length; i < length; i++) disposers[i]();
-  })
+  });
   return () => {
     let newItems = (this as Function)() || [],
       i: number,
@@ -114,37 +135,59 @@ function createProvider(id: symbol, initFn?: Function) {
           mapped = [];
           len = 0;
         }
-      }
-      else if (len === 0) {
+      } else if (len === 0) {
         for (j = 0; j < newLen; j++) {
           items[j] = newItems[j];
           mapped[j] = root(mapper);
         }
         len = newLen;
-      }
-      else {
+      } else {
+        temp = new Array(newLen);
+        tempdisposers = new Array(newLen);
+
         // skip common prefix
-        for (start = 0, end = Math.min(len, newLen); start < end && items[start] === newItems[start]; start++)
-        ;
-        // fast path for addition
-        if (start >= len && len <= newLen) {
-          for (j = start; j < newLen; j++) {
-            items[j] = newItems[j];
-            mapped[j] = root(mapper);
+        for (
+          start = 0, end = Math.min(len, newLen);
+          start < end && items[start] === newItems[start];
+          start++
+        );
+
+        // common suffix
+        for (
+          end = len - 1, newEnd = newLen - 1;
+          end >= start && newEnd >= start && items[end] === newItems[newEnd];
+          end--, newEnd--
+        ) {
+          temp[newEnd] = mapped[end];
+          tempdisposers[newEnd] = disposers[end];
+        }
+
+        // remove any remaining nodes and we're done
+        if (start > newEnd) {
+          for (j = end; start <= j; j--) disposers[j]();
+          const rLen = end - start + 1;
+          if (rLen > 0) {
+            mapped.splice(start, rLen);
+            disposers.splice(start, rLen);
           }
+          items = newItems.slice(0);
           len = newLen;
           return mapped;
         }
 
-        newIndices = new Map<T, number>();
-        temp = new Array(newLen);
-        tempdisposers = new Array(newLen);
-
-        for (end = len - 1, newEnd = newLen - 1; end >= 0 && newEnd >= 0 && items[end] === newItems[newEnd]; end-- , newEnd--) {
-          temp[newEnd] = mapped[end];
-          tempdisposers[newEnd] = disposers[end];
+        // insert any remaining updates and we're done
+        if (start > end) {
+          for (j = start; j <= newEnd; j++) mapped[j] = root(mapper);
+          for (; j < newLen; j++) {
+            mapped[j] = temp[j];
+            disposers[j] = tempdisposers[j];
+          }
+          items = newItems.slice(0);
+          len = newLen;
+          return mapped;
         }
         // 0) prepare a map of all indices in newItems, scanning backwards so we encounter them in natural order
+        newIndices = new Map<T, number>();
         newIndicesNext = new Array(newEnd + 1);
         for (j = newEnd; j >= start; j--) {
           item = newItems[j];
@@ -161,16 +204,14 @@ function createProvider(id: symbol, initFn?: Function) {
             tempdisposers[j] = disposers[i];
             j = newIndicesNext[j];
             newIndices.set(item, j);
-          }
-          else disposers[i]();
+          } else disposers[i]();
         }
         // 2) set all the new values, pulling from the temp array if copied, otherwise entering the new value
         for (j = start; j < newLen; j++) {
-          if (temp.hasOwnProperty(j)) {
+          if (j in temp) {
             mapped[j] = temp[j];
             disposers[j] = tempdisposers[j];
-          }
-          else mapped[j] = root(mapper);
+          } else mapped[j] = root(mapper);
         }
         // 3) in case the new set is shorter than the old, set the length of the mapped array
         len = mapped.length = newLen;
@@ -184,4 +225,4 @@ function createProvider(id: symbol, initFn?: Function) {
       return mapFn(newItems[j], j);
     }
   };
-}
+};
