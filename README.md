@@ -7,7 +7,7 @@ It accomplishes this with using [Babel Plugin JSX DOM Expressions](https://githu
 To use include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel loader, or rollup babel plugin
 
 ```js
-"plugins": [["jsx-dom-expressions", {moduleName: 'ko-jsx'}]]
+"plugins": [["jsx-dom-expressions", {moduleName: 'ko-jsx', wrapConditionals: true}]]
 ```
 
 # Installation

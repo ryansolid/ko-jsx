@@ -8,8 +8,7 @@ const plugins = [
   babel({
     extensions: ['.js', '.ts'],
     presets: ["@babel/preset-typescript"],
-    exclude: 'node_modules/**',
-    retainLines: true
+    exclude: 'node_modules/**'
   })
 ];
 

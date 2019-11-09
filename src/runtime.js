@@ -1,11 +1,12 @@
 import { Attributes, SVGAttributes, NonComposedEvents } from 'dom-expressions';
-import { computed as wrap } from './core';
+import { computed as wrap, condition as wrapCondition } from './core';;
+import { ignoreDependencies as ignore } from 'knockout';;
 
 
 
 const eventRegistry = new Set();
 
-export { wrap };
+export { wrap, wrapCondition };
 
 export function template(html, isSVG) {
   const t = document.createElement('template');
@@ -21,7 +22,7 @@ export function createComponent(Comp, props, dynamicKeys) {
     for (let i = 0; i < dynamicKeys.length; i++) dynamicProp(props, dynamicKeys[i]);
   }
 
-  return Comp(props);
+  return ignore(() => Comp(props));
 }
 
 export function delegateEvents(eventNames) {
