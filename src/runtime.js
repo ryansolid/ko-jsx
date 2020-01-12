@@ -5,6 +5,7 @@ import { ignoreDependencies as ignore } from 'knockout';;
 
 
 const eventRegistry = new Set();
+const config = {};
 
 export { wrap, wrapCondition };
 
@@ -40,20 +41,22 @@ export function clearDelegatedEvents() {
   eventRegistry.clear();
 }
 
-export function classList(node, value) {
+export function classList(node, value, prev) {
   const classKeys = Object.keys(value);
-  for (let i = 0; i < classKeys.length; i++) {
+  for (let i = 0, len = classKeys.length; i < len; i++) {
     const key = classKeys[i],
+      classValue = value[key],
       classNames = key.split(/\s+/);
-    for (let j = 0; j < classNames.length; j++)
-      node.classList.toggle(classNames[j], value[key]);
+    if (prev && prev[key] === classValue) continue;
+    for (let j = 0, nameLen = classNames.length; j < nameLen; j++)
+      node.classList.toggle(classNames[j], classValue);
   }
 }
 
-export function spread(node, accessor, isSVG) {
+export function spread(node, accessor, isSVG, skipChildren) {
   if (typeof accessor === 'function') {
-    wrap(current => spreadExpression(node, accessor(), current, isSVG));
-  } else spreadExpression(node, accessor, undefined, isSVG);
+    wrap(current => spreadExpression(node, accessor(), current, isSVG, skipChildren));
+  } else spreadExpression(node, accessor, undefined, isSVG, skipChildren);
 }
 
 export function insert(parent, accessor, marker, initial) {
@@ -68,44 +71,48 @@ export function insert(parent, accessor, marker, initial) {
 }
 
 // SSR
-let hydrateRegistry = null,
-  hydrateKey = 0,
-  SSR = false;
-
-export function isSSR() { return SSR; }
-export function startSSR() {
-  hydrateKey = 0;
-  SSR = true;
-}
-
-export function hydration(code, root) {
-  hydrateRegistry = new Map();
-  hydrateKey = 0;
-  SSR = false;
-  const iterator = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
-    acceptNode: node => node.hasAttribute('_hk') && NodeFilter.FILTER_ACCEPT
+export function renderToString(code, options = {}) {
+  options = { timeoutMs: 10000, ...options }
+  config.hydrate = { id: '', count: 0 };
+  const container = document.createElement("div");
+  return new Promise(resolve => {
+    setTimeout(() => resolve(container.innerHTML), options.timeoutMs);
+    if (!code.length) {
+      insert(container, code());
+      resolve(container.innerHTML);
+    } else insert(container, code(() => resolve(container.innerHTML)));
   });
-  let node;
-  while (node = iterator.nextNode()) hydrateRegistry.set(node.getAttribute('_hk'), node);
-
-  code();
-  hydrateRegistry = null;
 }
 
-export function getNextElement(template) {
-  if (!hydrateRegistry) {
+export function hydrate(code, root) {
+  config.hydrate = { id: '', count: 0, registry: new Map() };
+  const templates = root.querySelectorAll(`*[_hk]`);
+  for (let i = 0; i < templates.length; i++) {
+    const node = templates[i];
+    config.hydrate.registry.set(node.getAttribute('_hk'), node);
+  }
+  code();
+  delete config.hydrate;
+}
+
+export function getNextElement(template, isSSR) {
+  const hydrate = config.hydrate;
+  let node, key;
+  if (!hydrate || !hydrate.registry || !(node = hydrate.registry.get(key = `${hydrate.id}:${hydrate.count++}`))) {
     const el = template.cloneNode(true);
-    if (SSR) el.setAttribute('_hk', `${hydrateKey++}`);
+    if (isSSR && hydrate)
+      el.setAttribute('_hk', `${hydrate.id}:${hydrate.count++}`);
     return el;
   }
-  return hydrateRegistry.get(`${hydrateKey++}`);
+  if (window && window._$HYDRATION) window._$HYDRATION.completed.add(key);
+  return node;
 }
 
 export function getNextMarker(start) {
   let end = start,
     count = 0,
     current = [];
-  if (hydrateRegistry) {
+  if (config.hydrate && config.hydrate.registry) {
     while (end) {
       if (end.nodeType === 8) {
         const v = end.nodeValue;
@@ -120,6 +127,18 @@ export function getNextMarker(start) {
     }
   }
   return [end, current];
+}
+
+export function runHydrationEvents(id) {
+  if (window && window._$HYDRATION) {
+    const { completed, events } = window._$HYDRATION;
+    while (events.length) {
+      const [id, e] = events[0];
+      if (!completed.has(id)) return;
+      eventHandler(e);
+      events.shift();
+    }
+  }
 }
 
 // Internal Functions
@@ -163,41 +182,57 @@ function eventHandler(e) {
   }
 }
 
-function spreadExpression(node, props, prevProps = {}, isSVG) {
+function spreadExpression(node, props, prevProps = {}, isSVG, skipChildren) {
   let info;
-  for (const prop in props) {
-    const value = props[prop];
-    if (value === prevProps[prop]) continue;
-    if (prop === 'style') {
-      Object.assign(node.style, value);
-    } else if (prop === 'classList') {
-      classList(node, value);
-    // really only for forwarding from Components, can't forward normal ref
-    } else if (prop === 'ref' || prop === 'forwardRef') {
-      value(node);
-    } else if (prop.slice(0, 2) === 'on') {
-      const lc = prop.toLowerCase();
-      if (lc !== prop && !NonComposedEvents.has(lc.slice(2))) {
-        const name = lc.slice(2);
-        node[`__${name}`] = value;
-        delegateEvents([name]);
-      } else node[lc] = value;
-    } else if (prop === 'events') {
-      for (const eventName in value) node.addEventListener(eventName, value[eventName]);
-    } else if (prop === 'children') {
-      insertExpression(node, value, prevProps[prop]);
-    } else if (info = Attributes[prop]) {
-      if (info.type === 'attribute') {
-        node.setAttribute(prop, value);
-      } else node[info.alias] = value;
-    } else if (isSVG) {
-      if (info = SVGAttributes[prop]) {
-        if (info.alias) node.setAttribute(info.alias, value);
-        else node.setAttribute(prop, value);
-      } else node.setAttribute(prop.replace(/([A-Z])/g, g => `-${g[0].toLowerCase()}`), value);
-    } else node[prop] = value;
+  if (!skipChildren && "children" in props) {
+    wrap(() =>
+      (prevProps.children = insertExpression(
+        node,
+        props.children,
+        prevProps.children
+      ))
+    );
   }
-  return Object.assign({}, props);
+  wrap(() => {
+    for (const prop in props) {
+      if (prop === "children") continue;
+      const value = props[prop];
+      if (value === prevProps[prop]) continue;
+      if (prop === "style") {
+        Object.assign(node.style, value);
+      } else if (prop === "classList") {
+        classList(node, value, prevProps[prop]);
+        // really only for forwarding from Components, can't forward normal ref
+      } else if (prop === "ref" || prop === "forwardRef") {
+        value(node);
+      } else if (prop.slice(0, 2) === "on") {
+        const lc = prop.toLowerCase();
+        if (lc !== prop && !NonComposedEvents.has(lc.slice(2))) {
+          const name = lc.slice(2);
+          node[`__${name}`] = value;
+          delegateEvents([name]);
+        } else node[lc] = value;
+      } else if (prop === "events") {
+        for (const eventName in value)
+          node.addEventListener(eventName, value[eventName]);
+      } else if ((info = Attributes[prop])) {
+        if (info.type === "attribute") {
+          node.setAttribute(prop, value);
+        } else node[info.alias] = value;
+      } else if (isSVG) {
+        if ((info = SVGAttributes[prop])) {
+          if (info.alias) node.setAttribute(info.alias, value);
+          else node.setAttribute(prop, value);
+        } else
+          node.setAttribute(
+            prop.replace(/([A-Z])/g, g => `-${g[0].toLowerCase()}`),
+            value
+          );
+      } else node[prop] = value;
+      prevProps[prop] = value;
+    }
+  });
+  return prevProps;
 }
 
 function normalizeIncomingArray(normalized, array) {
@@ -242,6 +277,7 @@ function checkDynamicArray(array) {
 }
 
 function insertExpression(parent, value, current, marker) {
+
   if (value === current) return current;
   const t = typeof value,
     multi = marker !== undefined;
@@ -261,11 +297,14 @@ function insertExpression(parent, value, current, marker) {
       } else current = parent.textContent = value;
     }
   } else if (value == null || t === 'boolean') {
+    if (config.hydrate && config.hydrate.registry) return current;
     current = cleanChildren(parent, current, marker);
   } else if (t === 'function') {
     wrap(() => current = insertExpression(parent, value(), current, marker));
+
   } else if (Array.isArray(value)) {
     const array = normalizeIncomingArray([], value);
+    if (config.hydrate && config.hydrate.registry) return current;
     if (array.length === 0) {
       current = cleanChildren(parent, current, marker);
       if (multi) return current;
