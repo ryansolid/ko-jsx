@@ -70,9 +70,9 @@ export function computed<T>(fn: (prev?: T) => T) {
 
 // only updates when boolean expression changes
 export function condition<T>(fn: () => T) {
-  const o = observable(!!ignoreDependencies(fn));
+  const o = observable(ignoreDependencies(fn));
   computed(prev => {
-    const res = !!fn();
+    const res = fn();
     prev !== res && o(res);
     return res;
   });
