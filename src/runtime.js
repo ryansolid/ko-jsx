@@ -1,5 +1,5 @@
 import { Attributes, SVGAttributes, NonComposedEvents } from 'dom-expressions';
-import { computed as wrap, condition as wrapCondition } from './core';;
+import { computed as wrap } from './core';;
 import { ignoreDependencies as ignore } from 'knockout';;
 
 
@@ -7,7 +7,7 @@ import { ignoreDependencies as ignore } from 'knockout';;
 const eventRegistry = new Set();
 const config = {};
 
-export { wrap, wrapCondition };
+export { wrap };
 
 export function template(html, check, isSVG) {
   const t = document.createElement('template');
