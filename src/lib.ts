@@ -69,9 +69,8 @@ export function effect<T>(fn: (prev?: T) => T) {
 }
 
 // only updates when boolean expression changes
-export function memo<T>(fn: () => T, equal: boolean) {
-  if (typeof fn !== "function") return fn;
-  const o = observable(ignoreDependencies(fn));
+export function memo<T>(fn: () => T, equal?: boolean): () => T {
+  const o = observable<T>(ignoreDependencies(fn));
   effect((prev) => {
     const res = fn();
     (!equal || prev !== res) && o(res);
@@ -106,7 +105,8 @@ export function createComponent<T>(
     for (let i = 0; i < dynamicKeys.length; i++)
       dynamicProperty(props, dynamicKeys[i] as string);
   }
-  return ignoreDependencies(() => Comp(props as T));
+  const c: JSX.Element = ignoreDependencies(() => Comp(props as T));
+  return typeof c === "function" ? memo(c) : c;
 }
 
 // dynamic import to support code splitting
