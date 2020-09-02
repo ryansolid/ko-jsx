@@ -1,9 +1,4 @@
-import {
-  ignoreDependencies,
-  observable,
-  computed as koComputed,
-  subscribable,
-} from "knockout";
+import { ignoreDependencies, observable, computed as koComputed, subscribable } from "knockout";
 
 // patch ignoreDependencies
 declare module "knockout" {
@@ -31,7 +26,7 @@ export function root<T>(fn: (dispose: () => void) => T) {
   let d: any[], ret: T;
   globalContext = {
     disposables: d = [],
-    owner: globalContext,
+    owner: globalContext
   };
   ret = ignoreDependencies(() =>
     fn(() => {
@@ -50,73 +45,56 @@ export function cleanup(fn: () => void) {
 }
 
 export function effect<T>(fn: (prev?: T) => T, current?: T) {
-  let d: any[];
   const context = {
-      disposables: d = [],
-      owner: globalContext,
+      disposables: [] as (() => void)[],
+      owner: globalContext
+    },
+    cleanupFn = (final: boolean) => {
+      const d = context.disposables;
+      context.disposables = [];
+      for (let k = 0, len = d.length; k < len; k++) d[k]();
+      final && comp.dispose();
     },
     comp = koComputed(() => {
-      for (let k = 0, len = d.length; k < len; k++) d[k]();
-      d = [];
+      cleanupFn(false);
       globalContext = context;
       current = fn(current);
       globalContext = globalContext.owner;
     });
-  cleanup(() => {
-    for (let k = 0, len = d.length; k < len; k++) d[k]();
-    comp.dispose();
-  });
+  cleanup(() => cleanupFn(true));
 }
 
 // only updates when boolean expression changes
 export function memo<T>(fn: () => T, equal?: boolean): () => T {
   const o = observable<T>(ignoreDependencies(fn));
-  effect((prev) => {
+  effect(prev => {
     const res = fn();
     (!equal || prev !== res) && o(res);
     return res;
   });
-  return o;
+  return o as () => T;
 }
 
 type PropsWithChildren<P> = P & { children?: JSX.Element };
 export type Component<P = {}> = (props: PropsWithChildren<P>) => JSX.Element;
+export type ComponentProps<
+  T extends keyof JSX.IntrinsicElements | Component<any>
+> = T extends Component<infer P>
+  ? P
+  : T extends keyof JSX.IntrinsicElements
+  ? JSX.IntrinsicElements[T]
+  : {};
 
-type PossiblyWrapped<T> = {
-  [P in keyof T]: T[P] | (() => T[P]);
-};
-
-function dynamicProperty(props: any, key: string) {
-  const src = props[key];
-  Object.defineProperty(props, key, {
-    get() {
-      return src();
-    },
-    enumerable: true,
-  });
-}
-
-export function createComponent<T>(
-  Comp: (props: T) => JSX.Element,
-  props: PossiblyWrapped<T>,
-  dynamicKeys?: (keyof T)[]
-): JSX.Element {
-  if (dynamicKeys) {
-    for (let i = 0; i < dynamicKeys.length; i++)
-      dynamicProperty(props, dynamicKeys[i] as string);
-  }
-  const c: JSX.Element = ignoreDependencies(() => Comp(props as T));
-  return typeof c === "function" ? memo(c) : c;
+export function createComponent<T>(Comp: (props: T) => JSX.Element, props: T): JSX.Element {
+  return ignoreDependencies(() => Comp(props));
 }
 
 // dynamic import to support code splitting
-export function lazy<T extends Component<any>>(
-  fn: () => Promise<{ default: T }>
-): T {
+export function lazy<T extends Component<any>>(fn: () => Promise<{ default: T }>): T {
   return ((props: any) => {
     let Comp: T | undefined;
     const result = observable<T>();
-    fn().then((component) => result(component.default));
+    fn().then(component => result(component.default));
     const rendered = koComputed<JSX.Element | undefined>(
       () => (Comp = result()) && ignoreDependencies<JSX.Element>(() => Comp!(props))
     );
@@ -136,9 +114,7 @@ export function useContext(context: Context) {
 
 function lookup(owner: ContextOwner | null, key: symbol | string): any {
   return (
-    owner &&
-    ((owner.context && owner.context[key]) ||
-      (owner.owner && lookup(owner.owner, key)))
+    owner && ((owner.context && owner.context[key]) || (owner.owner && lookup(owner.owner, key)))
   );
 }
 
@@ -150,9 +126,7 @@ function resolveChildren(children: any): any {
     const results: any[] = [];
     for (let i = 0; i < children.length; i++) {
       let result = resolveChildren(children[i]);
-      Array.isArray(result)
-        ? results.push.apply(results, result)
-        : results.push(result);
+      Array.isArray(result) ? results.push.apply(results, result) : results.push(result);
     }
     return results;
   }
@@ -171,9 +145,7 @@ function createProvider(id: symbol) {
 }
 
 // Modified version of mapSample from S-array[https://github.com/adamhaile/S-array] by Adam Haile
-(subscribable.fn as any).memoMap = function <T, U>(
-  mapFn: (v: T, i: number) => U
-): () => U[] {
+(subscribable.fn as any).memoMap = function <T, U>(mapFn: (v: T, i: number) => U): () => U[] {
   let items = [] as T[],
     mapped = [] as U[],
     disposers = [] as (() => void)[],
