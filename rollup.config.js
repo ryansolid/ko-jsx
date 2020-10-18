@@ -1,10 +1,12 @@
 import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
+import commonJS from '@rollup/plugin-commonjs';
 
 const plugins = [
   nodeResolve({
     extensions: ['.js', '.ts']
   }),
+  commonJS(),
   babel({
     extensions: ['.js', '.ts'],
     babelHelpers: "bundled",
