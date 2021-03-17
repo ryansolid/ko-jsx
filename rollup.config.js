@@ -43,7 +43,7 @@ export default [{
     format: 'es',
     file: 'dist/html.js'
   }],
-  external: ['./index', 'lit-dom-expressions'],
+  external: ['./index', 'knockout'],
   plugins
 }, {
   input: 'src/h.ts',
@@ -54,6 +54,6 @@ export default [{
     format: 'es',
     file: 'dist/h.js'
   }],
-  external: ['./index', 'hyper-dom-expressions'],
+  external: ['./index', 'knockout'],
   plugins
 }];

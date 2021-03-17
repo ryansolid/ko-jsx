@@ -131,22 +131,6 @@ export function lazy<T extends Component<any>>(fn: () => Promise<{ default: T }>
   }) as T;
 }
 
-export function assignProps<T, U>(target: T, source: U): T & U;
-export function assignProps<T, U, V>(target: T, source1: U, source2: V): T & U & V;
-export function assignProps<T, U, V, W>(
-  target: T,
-  source1: U,
-  source2: V,
-  source3: W
-): T & U & V & W;
-export function assignProps(target: any, ...sources: any): any {
-  for (let i = 0; i < sources.length; i++) {
-    const descriptors = Object.getOwnPropertyDescriptors(sources[i]);
-    Object.defineProperties(target, descriptors);
-  }
-  return target;
-}
-
 export function splitProps<T extends object, K1 extends keyof T>(
   props: T,
   ...keys: [K1[]]
