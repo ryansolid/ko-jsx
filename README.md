@@ -10,6 +10,12 @@ To use include 'babel-plugin-jsx-dom-expressions' in your babelrc, webpack babel
 "plugins": [["jsx-dom-expressions", {moduleName: 'ko-jsx'}]]
 ```
 
+For TS JSX types add to your `tsconfig.json`:
+```js
+"jsx": "preserve",
+"jsxImportSource": "ko-jsx" 
+```
+
 # Installation
 ```sh
 > npm install ko-jsx babel-plugin-jsx-dom-expressions

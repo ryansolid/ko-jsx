@@ -1,4 +1,5 @@
-import { ignoreDependencies, observable, computed as koComputed, subscribable } from "knockout";
+import { ignoreDependencies, observable, computed as koComputed, subscribable, Observable } from "knockout";
+import type { JSX } from "./jsx"
 
 // patch ignoreDependencies
 declare module "knockout" {
@@ -73,6 +74,34 @@ export function memo<T>(fn: () => T, equal?: boolean): () => T {
     return res;
   });
   return o as () => T;
+}
+
+export function createSelector<T, U extends T>(
+  source: () => T,
+  fn: (a: U, b: T) => boolean = (a, b) => a === b
+){
+  let subs = new Map();
+  let v: T;
+  effect((p?: U) => {
+    v = source();
+    const keys = [...subs.keys()];
+    for (let i = 0, len = keys.length; i < len; i++) {
+      const key = keys[i];
+      if (fn(key, v) || p !== undefined && fn(key, p)) {
+        const o = subs.get(key);
+        o(null);
+      }
+    }
+    return v as U;
+  });
+  return (key: U) => {
+    let l: Observable<U | undefined> & { _count?: number };
+    if (!(l = subs.get(key))) subs.set(key, l = observable());
+    l();
+    l._count ? (l._count++) : (l._count = 1);
+    cleanup(() => l._count! > 1 ? l._count!-- : subs.delete(key))
+    return fn(key, v);
+  };
 }
 
 type PropsWithChildren<P> = P & { children?: JSX.Element };
