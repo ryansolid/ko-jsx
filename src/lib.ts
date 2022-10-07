@@ -131,6 +131,8 @@ export function lazy<T extends Component<any>>(fn: () => Promise<{ default: T }>
   }) as T;
 }
 
+export { ignoreDependencies as untrack };
+
 export function splitProps<T extends object, K1 extends keyof T>(
   props: T,
   ...keys: [K1[]]
